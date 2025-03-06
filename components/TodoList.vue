@@ -1,31 +1,5 @@
 <template>
   <div class="p-4 max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6 bg-base-200 p-4 rounded-lg">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
-          <button class="btn btn-sm btn-ghost" @click="previousMonth">
-            <span class="text-lg">←</span>
-          </button>
-          <h2 class="text-xl font-semibold">
-            {{ currentDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }) }}
-          </h2>
-          <button class="btn btn-sm btn-ghost" @click="nextMonth">
-            <span class="text-lg">→</span>
-          </button>
-        </div>
-        <div class="divider divider-horizontal"></div>
-        <button 
-          class="btn btn-sm" 
-          :class="{ 'btn-primary': isCurrentDateToday }"
-          @click="goToToday"
-        >
-          今日
-        </button>
-      </div>
-      <ThemeToggle />
-    </div>
-
     <!-- TODO追加モーダル -->
     <dialog id="todo_modal" class="modal" :class="{ 'modal-open': showModal }">
       <div class="modal-box">
@@ -57,7 +31,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useTodoStore } from '~/stores/todo'
-import ThemeToggle from './ThemeToggle.vue'
 
 // ストアとステート管理
 const todoStore = useTodoStore()
@@ -69,14 +42,6 @@ const todoInput = ref<HTMLInputElement | null>(null)
 
 const formatDate = (date: Date) => {
   return date.toISOString().split('T')[0]
-}
-
-const previousMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
-}
-
-const nextMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
 }
 
 const closeModal = () => {
@@ -91,19 +56,6 @@ const addTodo = () => {
     closeModal()
   }
 }
-
-const goToToday = () => {
-  const today = new Date()
-  currentDate.value = new Date(today.getFullYear(), today.getMonth(), 1)
-}
-
-const isCurrentDateToday = computed(() => {
-  const today = new Date()
-  return (
-    today.getMonth() === currentDate.value.getMonth() &&
-    today.getFullYear() === currentDate.value.getFullYear()
-  )
-})
 </script>
 
 <style scoped>
