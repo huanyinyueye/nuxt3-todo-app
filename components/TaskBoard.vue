@@ -31,11 +31,11 @@
 
     <!-- Task Columns -->
     <div class="grid grid-cols-4 gap-6">
-      <!-- New Task Column -->
+      <!-- 新規タスク -->
       <div class="bg-[#2A2D31] p-4 rounded-lg">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">新規タスク</h2>
-          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ filteredNewTasks.length }}</span>
+          <h2 class="text-lg font-medium">{{ columnTitles.new }}</h2>
+          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ newTasks.length }}</span>
         </div>
         <draggable 
           v-model="newTasks" 
@@ -45,69 +45,21 @@
           @change="(e: DragEvent) => handleDragChange('new', e)"
         >
           <template #item="{ element: todo }">
-            <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
-                 :class="{
-                   'border-blue-500': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                   'border-red-500 bg-red-900/10': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                 }">
-              <div class="flex items-start gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-2">
-                      <svg v-if="isOverdue(todo.dueDate) && todo.status !== 'completed'" class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p class="text-sm text-white break-words">{{ todo.text }}</p>
-                    </div>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button @click="editTask(todo)" class="btn btn-ghost btn-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button @click="deleteTask(todo.id)" class="btn btn-ghost btn-xs text-error">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span v-if="todo.priority" 
-                            :class="{
-                              'bg-red-500 text-white': todo.priority === 'high',
-                              'bg-yellow-500 text-black': todo.priority === 'medium',
-                              'bg-blue-500 text-white': todo.priority === 'low'
-                            }"
-                            class="text-xs px-2 py-0.5 rounded font-medium">
-                        {{ getPriorityLabel(todo.priority) }}
-                      </span>
-                      <span v-if="todo.label" class="bg-[#FFF4E5] bg-opacity-20 text-xs px-2 py-0.5 rounded">
-                        {{ todo.label }}
-                      </span>
-                    </div>
-                    <span v-if="todo.dueDate" 
-                          class="text-xs" 
-                          :class="{
-                            'text-gray-400': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                            'text-red-400 font-medium': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                          }">
-                      {{ formatDueDate(todo.dueDate) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TaskCard 
+              :todo="todo"
+              status="new"
+              @edit="editTask"
+              @delete="deleteTask"
+            />
           </template>
         </draggable>
       </div>
 
-      <!-- Scheduled Column -->
+      <!-- スケジュール済み -->
       <div class="bg-[#2A2D31] p-4 rounded-lg">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">スケジュール済み</h2>
-          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ filteredScheduledTasks.length }}</span>
+          <h2 class="text-lg font-medium">{{ columnTitles.scheduled }}</h2>
+          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ scheduledTasks.length }}</span>
         </div>
         <draggable 
           v-model="scheduledTasks" 
@@ -117,69 +69,21 @@
           @change="(e: DragEvent) => handleDragChange('scheduled', e)"
         >
           <template #item="{ element: todo }">
-            <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
-                 :class="{
-                   'border-yellow-500': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                   'border-red-500 bg-red-900/10': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                 }">
-              <div class="flex items-start gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-2">
-                      <svg v-if="isOverdue(todo.dueDate) && todo.status !== 'completed'" class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p class="text-sm text-white break-words">{{ todo.text }}</p>
-                    </div>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button @click="editTask(todo)" class="btn btn-ghost btn-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button @click="deleteTask(todo.id)" class="btn btn-ghost btn-xs text-error">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span v-if="todo.priority" 
-                            :class="{
-                              'bg-red-500 text-white': todo.priority === 'high',
-                              'bg-yellow-500 text-black': todo.priority === 'medium',
-                              'bg-blue-500 text-white': todo.priority === 'low'
-                            }"
-                            class="text-xs px-2 py-0.5 rounded font-medium">
-                        {{ getPriorityLabel(todo.priority) }}
-                      </span>
-                      <span v-if="todo.label" class="bg-[#FFF4E5] bg-opacity-20 text-xs px-2 py-0.5 rounded">
-                        {{ todo.label }}
-                      </span>
-                    </div>
-                    <span v-if="todo.dueDate" 
-                          class="text-xs" 
-                          :class="{
-                            'text-gray-400': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                            'text-red-400 font-medium': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                          }">
-                      {{ formatDueDate(todo.dueDate) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TaskCard 
+              :todo="todo"
+              status="scheduled"
+              @edit="editTask"
+              @delete="deleteTask"
+            />
           </template>
         </draggable>
       </div>
 
-      <!-- In Progress Column -->
+      <!-- 進行中 -->
       <div class="bg-[#2A2D31] p-4 rounded-lg">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">進行中</h2>
-          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ filteredInProgressTasks.length }}</span>
+          <h2 class="text-lg font-medium">{{ columnTitles.in_progress }}</h2>
+          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ inProgressTasks.length }}</span>
         </div>
         <draggable 
           v-model="inProgressTasks" 
@@ -189,69 +93,21 @@
           @change="(e: DragEvent) => handleDragChange('in_progress', e)"
         >
           <template #item="{ element: todo }">
-            <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
-                 :class="{
-                   'border-purple-500': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                   'border-red-500 bg-red-900/10': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                 }">
-              <div class="flex items-start gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-2">
-                      <svg v-if="isOverdue(todo.dueDate) && todo.status !== 'completed'" class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p class="text-sm text-white break-words">{{ todo.text }}</p>
-                    </div>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button @click="editTask(todo)" class="btn btn-ghost btn-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button @click="deleteTask(todo.id)" class="btn btn-ghost btn-xs text-error">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span v-if="todo.priority" 
-                            :class="{
-                              'bg-red-500 text-white': todo.priority === 'high',
-                              'bg-yellow-500 text-black': todo.priority === 'medium',
-                              'bg-blue-500 text-white': todo.priority === 'low'
-                            }"
-                            class="text-xs px-2 py-0.5 rounded font-medium">
-                        {{ getPriorityLabel(todo.priority) }}
-                      </span>
-                      <span v-if="todo.label" class="bg-[#E8F1FF] bg-opacity-20 text-xs px-2 py-0.5 rounded">
-                        {{ todo.label }}
-                      </span>
-                    </div>
-                    <span v-if="todo.dueDate" 
-                          class="text-xs" 
-                          :class="{
-                            'text-gray-400': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                            'text-red-400 font-medium': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                          }">
-                      {{ formatDueDate(todo.dueDate) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TaskCard 
+              :todo="todo"
+              status="in_progress"
+              @edit="editTask"
+              @delete="deleteTask"
+            />
           </template>
         </draggable>
       </div>
 
-      <!-- Completed Column -->
+      <!-- 完了 -->
       <div class="bg-[#2A2D31] p-4 rounded-lg">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">完了</h2>
-          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ filteredCompletedTasks.length }}</span>
+          <h2 class="text-lg font-medium">{{ columnTitles.completed }}</h2>
+          <span class="bg-[#1E2124] px-3 py-1 rounded-lg text-sm">{{ completedTasks.length }}</span>
         </div>
         <draggable 
           v-model="completedTasks" 
@@ -261,60 +117,12 @@
           @change="(e: DragEvent) => handleDragChange('completed', e)"
         >
           <template #item="{ element: todo }">
-            <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
-                 :class="{
-                   'border-green-500': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                   'border-red-500 bg-red-900/10': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                 }">
-              <div class="flex items-start gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-2">
-                      <svg v-if="isOverdue(todo.dueDate) && todo.status !== 'completed'" class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p class="text-sm text-white break-words">{{ todo.text }}</p>
-                    </div>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button @click="editTask(todo)" class="btn btn-ghost btn-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button @click="deleteTask(todo.id)" class="btn btn-ghost btn-xs text-error">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="mt-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span v-if="todo.priority" 
-                            :class="{
-                              'bg-red-500 text-white': todo.priority === 'high',
-                              'bg-yellow-500 text-black': todo.priority === 'medium',
-                              'bg-blue-500 text-white': todo.priority === 'low'
-                            }"
-                            class="text-xs px-2 py-0.5 rounded font-medium">
-                        {{ getPriorityLabel(todo.priority) }}
-                      </span>
-                      <span v-if="todo.label" class="bg-[#4CAF50] bg-opacity-20 text-xs px-2 py-0.5 rounded">
-                        {{ todo.label }}
-                      </span>
-                    </div>
-                    <span v-if="todo.dueDate" 
-                          class="text-xs" 
-                          :class="{
-                            'text-gray-400': !isOverdue(todo.dueDate) || todo.status === 'completed',
-                            'text-red-400 font-medium': isOverdue(todo.dueDate) && todo.status !== 'completed'
-                          }">
-                      {{ formatDueDate(todo.dueDate) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TaskCard 
+              :todo="todo"
+              status="completed"
+              @edit="editTask"
+              @delete="deleteTask"
+            />
           </template>
         </draggable>
       </div>
@@ -387,7 +195,9 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useTodoStore } from '~/stores/todo'
 import draggable from 'vuedraggable'
+import TaskCard from './TaskCard.vue'
 
+// タスクの型定義
 interface Todo {
   id: number
   text: string
@@ -399,6 +209,7 @@ interface Todo {
   createdAt: number
 }
 
+// ドラッグ＆ドロップイベントの型定義
 interface DragEvent {
   added?: { element: Todo }
   moved?: { element: Todo }
@@ -406,21 +217,35 @@ interface DragEvent {
 
 const todoStore = useTodoStore()
 
-// Initialize store
+// ストアの初期化
 todoStore.init()
 
-// Task lists
+// タスクリストの状態管理
 const newTasks = ref<Todo[]>([])
 const scheduledTasks = ref<Todo[]>([])
 const inProgressTasks = ref<Todo[]>([])
 const completedTasks = ref<Todo[]>([])
 
-// Search and filter
+// 検索とフィルタリングの状態
 const searchQuery = ref('')
 const filterPriority = ref<Todo['priority'] | ''>('')
 const sortBy = ref<'dueDate' | 'priority' | 'created'>('dueDate')
 
-// Task lists with filtering and sorting
+const columnTitles = {
+  new: '新規タスク',
+  scheduled: 'スケジュール済み',
+  in_progress: '進行中',
+  completed: '完了'
+} as const
+
+const taskColumns = computed(() => ({
+  new: newTasks.value,
+  scheduled: scheduledTasks.value,
+  in_progress: inProgressTasks.value,
+  completed: completedTasks.value
+}))
+
+// フィルタリングされたタスクリストの計算
 const filteredNewTasks = computed<Todo[]>(() => {
   if (!todoStore?.todos?.length) return []
   return filterAndSortTasks(todoStore.getNewTasks, false)
@@ -441,13 +266,13 @@ const filteredCompletedTasks = computed<Todo[]>(() => {
   return filterAndSortTasks(todoStore.getCompletedTasks, false)
 })
 
-// Initialize task lists with default empty arrays
+// タスクリストの初期値を設定
 newTasks.value = []
 scheduledTasks.value = []
 inProgressTasks.value = []
 completedTasks.value = []
 
-// Initialize task lists on mount
+// コンポーネントマウント時の初期化
 onMounted(() => {
   if (todoStore?.todos?.length) {
     newTasks.value = todoStore.getNewTasks
@@ -457,12 +282,11 @@ onMounted(() => {
   }
 })
 
-// Watch for changes in filtered tasks and update the refs
+// フィルタリングされたタスクの変更を監視
 watch([filteredNewTasks, filteredScheduledTasks, filteredInProgressTasks, filteredCompletedTasks], 
   ([newTasksVal, scheduledTasksVal, inProgressTasksVal, completedTasksVal]) => {
     if (process.client) {
-      // Only update if the length has changed (new task added/removed)
-      // or if the search/filter/sort criteria have changed
+      // タスクの数が変更された場合、または検索/フィルタ/ソートが変更された場合のみ更新
       if (newTasks.value.length !== newTasksVal.length || searchQuery.value || filterPriority.value || sortBy.value !== 'created') {
         newTasks.value = newTasksVal ?? []
       }
@@ -480,12 +304,12 @@ watch([filteredNewTasks, filteredScheduledTasks, filteredInProgressTasks, filter
   { immediate: true }
 )
 
-// Filter and sort function
+// タスクのフィルタリングとソート処理
 const filterAndSortTasks = (tasks: Todo[], shouldSort: boolean = false) => {
   if (!Array.isArray(tasks) || !tasks.length) return []
   let filtered = [...tasks]
 
-  // Search filter
+  // テキスト検索によるフィルタリング
   if (searchQuery.value) {
     filtered = filtered.filter(task => 
       task?.text?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -493,12 +317,12 @@ const filterAndSortTasks = (tasks: Todo[], shouldSort: boolean = false) => {
     )
   }
 
-  // Priority filter
+  // 優先度によるフィルタリング
   if (filterPriority.value) {
     filtered = filtered.filter(task => task?.priority === filterPriority.value)
   }
 
-  // Only sort if explicitly requested or if user is using sort controls
+  // ソート条件に基づいてタスクを並び替え
   if (shouldSort || sortBy.value !== 'created') {
     filtered.sort((a, b) => {
       if (!a || !b) return 0
@@ -523,7 +347,7 @@ const filterAndSortTasks = (tasks: Todo[], shouldSort: boolean = false) => {
   return filtered
 }
 
-// Drag and drop handling
+// ドラッグ＆ドロップの処理
 const handleDragChange = (newStatus: Todo['status'], event: DragEvent) => {
   if (!event.added && !event.moved) return
   
@@ -533,19 +357,22 @@ const handleDragChange = (newStatus: Todo['status'], event: DragEvent) => {
   }
 }
 
-// Task editing
+// タスク編集の状態管理
 const editingTask = ref<Todo | null>(null)
 
+// タスク編集モーダルを開く
 const editTask = (task: Todo) => {
   editingTask.value = { 
     ...task
   }
 }
 
+// タスク編集モーダルを閉じる
 const closeEditModal = () => {
   editingTask.value = null
 }
 
+// タスク編集の保存
 const handleEditSubmit = () => {
   if (editingTask.value) {
     todoStore.updateTask(editingTask.value)
@@ -553,14 +380,14 @@ const handleEditSubmit = () => {
   }
 }
 
-// Task deletion
+// タスクの削除
 const deleteTask = (id: number) => {
   if (confirm('このタスクを削除してもよろしいですか？')) {
     todoStore.removeTodo(id)
   }
 }
 
-// Utility functions
+// 優先度のラベル取得
 const getPriorityLabel = (priority: Todo['priority']) => {
   const labels = {
     high: '高',
@@ -570,6 +397,7 @@ const getPriorityLabel = (priority: Todo['priority']) => {
   return labels[priority || 'low']
 }
 
+// 期限日の表示形式を整形
 const formatDueDate = (date: string) => {
   if (!date) return ''
   const dueDate = new Date(date)
@@ -584,17 +412,17 @@ const formatDueDate = (date: string) => {
   } else if (diffDays <= 7) {
     return `${diffDays}日後`
   } else {
-    return dueDate.toISOString().split('T')[0] // Returns YYYY-MM-DD format
+    return dueDate.toISOString().split('T')[0]
   }
 }
 
-// Add the isOverdue function
+// タスクが期限切れかどうかを判定
 const isOverdue = (dueDate?: string) => {
   if (!dueDate) return false
   const today = new Date()
-  today.setHours(0, 0, 0, 0) // Reset time to start of day
+  today.setHours(0, 0, 0, 0)
   const taskDueDate = new Date(dueDate)
-  taskDueDate.setHours(0, 0, 0, 0) // Reset time to start of day
+  taskDueDate.setHours(0, 0, 0, 0)
   return taskDueDate < today
 }
 </script> 
