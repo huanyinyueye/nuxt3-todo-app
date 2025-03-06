@@ -3,6 +3,8 @@
 A modern To-do application built with Nuxt 3.  
 Nuxt 3 で構築されたTo-doアプリケーションです。
 
+🌐 **Live Demo**: [nuxt3-todo-app-drab.vercel.app](https://nuxt3-todo-app-drab.vercel.app)
+
 ## Features / 機能
 
 - 🎯 Board layout / ボードレイアウト
