@@ -209,7 +209,7 @@ const closeModal = () => {
 
 const addTodo = () => {
   if (newTodo.value.trim() && selectedDate.value) {
-    todoStore.addTodo(newTodo.value.trim(), formatDate(selectedDate.value))
+    todoStore.addTodo(newTodo.value.trim(), 'new', formatDate(selectedDate.value))
     closeModal()
   }
 }

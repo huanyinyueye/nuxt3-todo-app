@@ -112,6 +112,9 @@ export const useTodoStore = defineStore('todo', {
     },
     getCompletedTasks(state): Todo[] {
       return state?.todos?.filter(todo => todo.status === 'completed') ?? []
+    },
+    getTodosByDate: (state) => (date: string) => {
+      return state.todos.filter(todo => todo.dueDate === date)
     }
   }
 })
