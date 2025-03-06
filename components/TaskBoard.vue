@@ -42,7 +42,7 @@
           :group="{ name: 'tasks' }"
           item-key="id"
           class="space-y-3 min-h-[200px]"
-          @change="(e) => handleDragChange('new', e)"
+          @change="(e: DragEvent) => handleDragChange('new', e)"
         >
           <template #item="{ element: todo }">
             <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
@@ -114,7 +114,7 @@
           :group="{ name: 'tasks' }"
           item-key="id"
           class="space-y-3 min-h-[200px]"
-          @change="(e) => handleDragChange('scheduled', e)"
+          @change="(e: DragEvent) => handleDragChange('scheduled', e)"
         >
           <template #item="{ element: todo }">
             <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
@@ -186,7 +186,7 @@
           :group="{ name: 'tasks' }"
           item-key="id"
           class="space-y-3 min-h-[200px]"
-          @change="(e) => handleDragChange('in_progress', e)"
+          @change="(e: DragEvent) => handleDragChange('in_progress', e)"
         >
           <template #item="{ element: todo }">
             <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
@@ -258,7 +258,7 @@
           :group="{ name: 'tasks' }"
           item-key="id"
           class="space-y-3 min-h-[200px]"
-          @change="(e) => handleDragChange('completed', e)"
+          @change="(e: DragEvent) => handleDragChange('completed', e)"
         >
           <template #item="{ element: todo }">
             <div class="bg-[#1E2124] p-4 rounded-lg group hover:bg-[#2A2D31] transition-colors border-l-4"
@@ -399,6 +399,11 @@ interface Todo {
   createdAt: number
 }
 
+interface DragEvent {
+  added?: { element: Todo }
+  moved?: { element: Todo }
+}
+
 const todoStore = useTodoStore()
 
 // Initialize store
@@ -418,22 +423,22 @@ const sortBy = ref<'dueDate' | 'priority' | 'created'>('dueDate')
 // Task lists with filtering and sorting
 const filteredNewTasks = computed<Todo[]>(() => {
   if (!todoStore?.todos?.length) return []
-  return filterAndSortTasks(todoStore.getNewTasks)
+  return filterAndSortTasks(todoStore.getNewTasks, false)
 })
 
 const filteredScheduledTasks = computed<Todo[]>(() => {
   if (!todoStore?.todos?.length) return []
-  return filterAndSortTasks(todoStore.getScheduledTasks)
+  return filterAndSortTasks(todoStore.getScheduledTasks, false)
 })
 
 const filteredInProgressTasks = computed<Todo[]>(() => {
   if (!todoStore?.todos?.length) return []
-  return filterAndSortTasks(todoStore.getInProgressTasks)
+  return filterAndSortTasks(todoStore.getInProgressTasks, false)
 })
 
 const filteredCompletedTasks = computed<Todo[]>(() => {
   if (!todoStore?.todos?.length) return []
-  return filterAndSortTasks(todoStore.getCompletedTasks)
+  return filterAndSortTasks(todoStore.getCompletedTasks, false)
 })
 
 // Initialize task lists with default empty arrays
@@ -456,17 +461,27 @@ onMounted(() => {
 watch([filteredNewTasks, filteredScheduledTasks, filteredInProgressTasks, filteredCompletedTasks], 
   ([newTasksVal, scheduledTasksVal, inProgressTasksVal, completedTasksVal]) => {
     if (process.client) {
-      newTasks.value = newTasksVal ?? []
-      scheduledTasks.value = scheduledTasksVal ?? []
-      inProgressTasks.value = inProgressTasksVal ?? []
-      completedTasks.value = completedTasksVal ?? []
+      // Only update if the length has changed (new task added/removed)
+      // or if the search/filter/sort criteria have changed
+      if (newTasks.value.length !== newTasksVal.length || searchQuery.value || filterPriority.value || sortBy.value !== 'created') {
+        newTasks.value = newTasksVal ?? []
+      }
+      if (scheduledTasks.value.length !== scheduledTasksVal.length || searchQuery.value || filterPriority.value || sortBy.value !== 'created') {
+        scheduledTasks.value = scheduledTasksVal ?? []
+      }
+      if (inProgressTasks.value.length !== inProgressTasksVal.length || searchQuery.value || filterPriority.value || sortBy.value !== 'created') {
+        inProgressTasks.value = inProgressTasksVal ?? []
+      }
+      if (completedTasks.value.length !== completedTasksVal.length || searchQuery.value || filterPriority.value || sortBy.value !== 'created') {
+        completedTasks.value = completedTasksVal ?? []
+      }
     }
   },
   { immediate: true }
 )
 
 // Filter and sort function
-const filterAndSortTasks = (tasks: Todo[]) => {
+const filterAndSortTasks = (tasks: Todo[], shouldSort: boolean = false) => {
   if (!Array.isArray(tasks) || !tasks.length) return []
   let filtered = [...tasks]
 
@@ -483,29 +498,33 @@ const filterAndSortTasks = (tasks: Todo[]) => {
     filtered = filtered.filter(task => task?.priority === filterPriority.value)
   }
 
-  // Sorting
-  return filtered.sort((a, b) => {
-    if (!a || !b) return 0
-    switch (sortBy.value) {
-      case 'dueDate':
-        const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0
-        const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0
-        return dateA - dateB
-      case 'priority':
-        const priorityOrder = { high: 0, medium: 1, low: 2 }
-        const priorityA = priorityOrder[a.priority || 'low'] || 2
-        const priorityB = priorityOrder[b.priority || 'low'] || 2
-        return priorityA - priorityB
-      case 'created':
-        return (a.createdAt || 0) - (b.createdAt || 0)
-      default:
-        return 0
-    }
-  })
+  // Only sort if explicitly requested or if user is using sort controls
+  if (shouldSort || sortBy.value !== 'created') {
+    filtered.sort((a, b) => {
+      if (!a || !b) return 0
+      switch (sortBy.value) {
+        case 'dueDate':
+          const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0
+          const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0
+          return dateA - dateB
+        case 'priority':
+          const priorityOrder = { high: 0, medium: 1, low: 2 }
+          const priorityA = priorityOrder[a.priority || 'low'] || 2
+          const priorityB = priorityOrder[b.priority || 'low'] || 2
+          return priorityA - priorityB
+        case 'created':
+          return (a.createdAt || 0) - (b.createdAt || 0)
+        default:
+          return 0
+      }
+    })
+  }
+
+  return filtered
 }
 
 // Drag and drop handling
-const handleDragChange = (newStatus: Todo['status'], event: any) => {
+const handleDragChange = (newStatus: Todo['status'], event: DragEvent) => {
   if (!event.added && !event.moved) return
   
   const task = event.added?.element || event.moved?.element
