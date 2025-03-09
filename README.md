@@ -21,6 +21,14 @@ Nuxt 3 で構築されたTo-doアプリケーションです。
 - [DaisyUI](https://daisyui.com/) - UI Components
 - [Pinia](https://pinia.vuejs.org/) - State Management
 
+## Versions / バージョン情報
+
+- Nuxt.js: ^3.15.4
+- Node.js: >=18.0.0
+- Vue.js: ^3.5.13
+- DaisyUI: ^5.0.0
+- Tailwind CSS: ^3.4.17
+
 ## Setup / セットアップ
 
 ```bash
